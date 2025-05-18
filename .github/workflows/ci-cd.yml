@@ -1,0 +1,35 @@
+# File: .github/workflows/ci-cd.yml
+
+name: CI-CD Pipeline for Java Web App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    name: Build and Trigger Jenkins Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Build WAR with Maven
+      run: mvn clean package
+
+    - name: Trigger Jenkins Deployment Job
+      env:
+        JENKINS_USER: ${{ secrets.JENKINS_USER }}
+        JENKINS_TOKEN: ${{ secrets.JENKINS_TOKEN }}
+        JENKINS_URL: ${{ secrets.JENKINS_URL }}
+      run: |
+        curl -X POST "$JENKINS_URL/job/deploy-java-app/build" \
+          --user "$JENKINS_USER:$JENKINS_TOKEN"
